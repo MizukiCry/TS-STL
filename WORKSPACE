@@ -20,3 +20,4 @@ http_archive(
 load("@hedron_compile_commands//:workspace_setup.bzl", "hedron_compile_commands_setup")
 hedron_compile_commands_setup()
 # bazel run @hedron_compile_commands//:refresh_all
+# cloc --vcs=git

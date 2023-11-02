@@ -5,12 +5,25 @@
 #include <cstddef>
 #include <mutex>
 #include <shared_mutex>
+#include <utility>
 
 namespace ts_stl {
 template <typename T> class Vector {
+public:
+  using value_type = T;
+  using pointer = T *;
+  using const_pointer = const T *;
+  using reference = T &;
+  using const_reference = const T &;
+  using difference_type = std::ptrdiff_t;
+  using size_type = std::size_t;
+
+  using iterator = T *;
+  using const_iterator = const T *;
+
 private:
-  size_t size_ = 0;
-  size_t capacity_ = 0;
+  size_type size_ = 0;
+  size_type capacity_ = 0;
   T *data_ = nullptr;
 
   // The multiple of each expansion
@@ -19,7 +32,7 @@ private:
   // Whether shrink automatically
   bool auto_shrink_ = false;
 
-  void ChangeCapacity(size_t capacity) {
+  void ChangeCapacity(size_type capacity) {
     if (capacity == capacity_) {
       return;
     }
@@ -36,7 +49,8 @@ private:
 
   void CheckExpand() {
     if (size_ == capacity_) {
-      ChangeCapacity(Max(capacity_, static_cast<size_t>(1)) * expand_factor_);
+      ChangeCapacity(Max(capacity_, static_cast<size_type>(1)) *
+                     expand_factor_);
     }
   }
 
@@ -47,16 +61,6 @@ private:
   }
 
 public:
-  using value_type = T;
-  using pointer = T *;
-  using const_pointer = const T *;
-  using reference = T &;
-  using const_reference = const T &;
-  using difference_type = std::ptrdiff_t;
-
-  using iterator = T *;
-  using const_iterator = const T *;
-
   auto begin() -> iterator { return data_; }
   auto end() -> iterator { return data_ + size_; }
   auto begin() const -> const_iterator { return data_; }
@@ -64,15 +68,53 @@ public:
 
   Vector() {}
 
-  Vector(size_t size) : size_(size) { ChangeCapacity(size); }
+  Vector(size_type size) : size_(size) { ChangeCapacity(size); }
 
-  Vector(size_t size, const T &value) : size_(size) {
+  Vector(size_type size, const T &value) : size_(size) {
     ChangeCapacity(size);
     Fill(data_, data_ + size, value);
   }
 
-  Vector(const Vector &other) = delete;
-  Vector &operator=(const Vector &other) = delete;
+  Vector(const Vector &other)
+      : size_(other.size_), capacity_(other.capacity_),
+        expand_factor_(other.expand_factor_), auto_shrink_(other.auto_shrink_) {
+    data_ = new value_type[capacity_];
+    Copy(data_, other.data_, other.data_ + size_);
+  }
+
+  Vector(Vector &&other) {
+    size_ = other.size_;
+    capacity_ = other.capacity_;
+    expand_factor_ = other.expand_factor_;
+    auto_shrink_ = other.auto_shrink_;
+    data_ = other.data_;
+    other.data_ = nullptr;
+  }
+
+  auto operator=(const Vector &other) -> Vector & {
+    if (this != other) {
+      size_ = other.size_;
+      capacity_ = other.capacity_;
+      expand_factor_ = other.expand_factor_;
+      auto_shrink_ = other.auto_shrink_;
+      delete[] data_;
+      data_ = new value_type[capacity_];
+      Copy(data_, other.data_, other.data_ + size_);
+    }
+    return *this;
+  }
+
+  auto operator=(Vector &&other) -> Vector & {
+    if (this != other) {
+      size_ = other.size_;
+      capacity_ = other.capacity_;
+      expand_factor_ = other.expand_factor_;
+      auto_shrink_ = other.auto_shrink_;
+      data_ = other.data_;
+      other.data_ = nullptr;
+    }
+    return *this;
+  }
 
   ~Vector() { delete[] data_; }
 
@@ -81,14 +123,29 @@ public:
     *(data_ + size_++) = value;
   }
 
-  T PopBack() {
+  template <typename... Args> void EmplaceBack(Args &&...args) {
+    CheckExpand();
+    new (data_ + size_++) T(std::forward<Args>(args)...);
+  }
+
+  auto PopBack() -> T {
     Assert(size_ > 0, "Vector::PopBack(): vector is empty.");
     T t = *(data_ + --size_);
     CheckShrink();
     return t;
   }
 
-  void Insert(size_t index, const T &value) {
+  auto Back() -> T & {
+    Assert(size_ > 0, "Vector::Back(): vector is empty.");
+    return *(data_ + size_ - 1);
+  }
+
+  auto Back() const -> const T & {
+    Assert(size_ > 0, "Vector::Back(): vector is empty.");
+    return *(data_ + size_ - 1);
+  }
+
+  void Insert(size_type index, const T &value) {
     Assert(index <= size_, "Vector::Insert(): index out of range.");
     CheckExpand();
     CopyBackward(data_ + size_ + 1, data_ + index, data_ + size_);
@@ -96,14 +153,24 @@ public:
     size_++;
   }
 
-  void Delete(size_t index) {
+  template <typename... Args> void Emplace(size_type index, Args &&...args) {
+    Assert(index <= size_, "Vector::Emplace(): index out of range.");
+    CheckExpand();
+    CopyBackward(data_ + size_ + 1, data_ + index, data_ + size_);
+    new (data_ + index) T(std::forward<Args>(args)...);
+    size_++;
+  }
+
+  auto Delete(size_type index) -> T {
     Assert(index < size_, "Vector::Delete(): index out of range.");
+    T t = *(data_ + index);
     Copy(data_ + index, data_ + index + 1, data_ + size_);
     size_--;
     CheckShrink();
+    return t;
   }
 
-  void Resize(size_t size) {
+  void Resize(size_type size) {
     if (capacity_ < size) {
       ChangeCapacity(size * expand_factor_);
     }
@@ -111,26 +178,26 @@ public:
     CheckShrink();
   }
 
-  void Reserve(size_t capacity) {
+  void Reserve(size_type capacity) {
     if (capacity > capacity_) {
       ChangeCapacity(capacity);
     }
   }
 
-  auto operator[](size_t index) -> T & {
+  auto operator[](size_type index) -> T & {
     Assert(index < size_, "Vector::operator[]: index out of range.");
     return data_[index];
   }
 
-  auto operator[](size_t index) const -> const T & {
+  auto operator[](size_type index) const -> const T & {
     Assert(index < size_, "Vector::operator[]: index out of range.");
     return data_[index];
   }
 
-  auto size() -> size_t const { return size_; }
-  auto capacity() -> size_t const { return capacity_; }
+  auto size() const -> size_type { return size_; }
+  auto capacity() const -> size_type { return capacity_; }
 
-  auto auto_shrink() -> bool const { return auto_shrink_; }
+  auto auto_shrink() const -> bool { return auto_shrink_; }
   void set_auto_shrink(bool auto_shrink) { auto_shrink_ = auto_shrink; }
 
   auto expand_factor() const -> double { return expand_factor_; }
@@ -148,30 +215,169 @@ public:
   }
 };
 
-template <typename T> class SyncVector : public Vector<T> {
+template <typename T> class SyncVector {
+public:
+  using value_type = T;
+  using pointer = T *;
+  using const_pointer = const T *;
+  using reference = T &;
+  using const_reference = const T &;
+  using difference_type = std::ptrdiff_t;
+  using size_type = std::size_t;
+
+  using iterator = T *;
+  using const_iterator = const T *;
+
 private:
-  std::shared_mutex m;
+  Vector<T> v_;
+  std::shared_mutex m_;
 
 public:
-  void ReadLock() { m.lock_shared(); }
+  auto begin() -> iterator { return v_.begin(); }
+  auto end() -> iterator { return v_.end(); }
+  auto begin() const -> const_iterator { return v_.begin(); }
+  auto end() const -> const_iterator { return v_.end(); }
 
-  void WriteLock() { m.lock(); }
+  SyncVector() {}
 
-  void ReadUnlock() { m.unlock_shared(); }
+  SyncVector(size_type size) : v_(size) {}
 
-  void WriteUnlock() { m.unlock(); }
+  SyncVector(size_type size, const T &value) : v_(size, value) {}
 
-  auto TryReadLock() -> bool { return m.try_lock_shared(); }
+  SyncVector(const SyncVector &other) : v_(other.v_) {}
 
-  auto TryWriteLock() -> bool { return m.try_lock(); }
+  SyncVector(SyncVector &&other) : v_(std::move(other.v_)) {}
 
-  auto ReadLockGuard() -> std::shared_lock<std::shared_mutex> {
-    return std::shared_lock<std::shared_mutex>(m);
+  ~SyncVector() = default;
+
+  SyncVector &operator=(const SyncVector &other) {
+    std::unique_lock<std::shared_mutex> lock(m_);
+    v_ = other.v_;
+    return *this;
   }
 
-  auto WriteLockGuard() -> std::unique_lock<std::shared_mutex> {
-    return std::unique_lock<std::shared_mutex>(m);
+  SyncVector &operator=(SyncVector &&other) {
+    std::unique_lock<std::shared_mutex> lock(m_);
+    v_ = std::move(other.v_);
+    return *this;
   }
+
+  void PushBack(const T &value) {
+    std::unique_lock<std::shared_mutex> lock(m_);
+    v_.PushBack(value);
+  }
+
+  template <typename... Args> void EmplaceBack(Args &&...args) {
+    std::unique_lock<std::shared_mutex> lock(m_);
+    v_.EmplaceBack(std::forward<Args>(args)...);
+  }
+
+  auto PopBack() -> T {
+    std::unique_lock<std::shared_mutex> lock(m_);
+    return v_.PopBack();
+  }
+
+  auto Back() -> T & {
+    std::unique_lock<std::shared_mutex> lock(m_);
+    return v_.Back();
+  }
+
+  auto Back() const -> const T & { return v_.Back(); }
+
+  void Insert(size_type index, const T &value) {
+    std::unique_lock<std::shared_mutex> lock(m_);
+    v_.Insert(index, value);
+  }
+
+  template <typename... Args> void Emplace(size_type index, Args &&...args) {
+    std::unique_lock<std::shared_mutex> lock(m_);
+    v_.Emplace(index, std::forward<Args>(args)...);
+  }
+
+  auto Delete(size_type index) -> T {
+    std::unique_lock<std::shared_mutex> lock(m_);
+    return v_.Delete(index);
+  }
+
+  void Resize(size_type size) {
+    std::unique_lock<std::shared_mutex> lock(m_);
+    v_.Resize(size);
+  }
+
+  void Reserve(size_type capacity) {
+    std::unique_lock<std::shared_mutex> lock(m_);
+    v_.Reserve(capacity);
+  }
+
+  auto operator[](size_type index) -> T {
+    std::shared_lock<std::shared_mutex> lock(m_);
+    return v_[index];
+  }
+
+  auto operator[](size_type index) const -> T { return v_[index]; }
+
+  void Set(size_type index, const T &value) {
+    std::unique_lock<std::shared_mutex> lock(m_);
+    v_[index] = value;
+  }
+
+  void Set(size_type index, const T &&value) {
+    std::unique_lock<std::shared_mutex> lock(m_);
+    v_[index] = std::move(value);
+  }
+
+  auto size() -> size_type {
+    std::shared_lock<std::shared_mutex> lock(m_);
+    return v_.size();
+  }
+  auto size() const -> size_type { return v_.size(); }
+  auto capacity() -> size_type {
+    std::shared_lock<std::shared_mutex> lock(m_);
+    return v_.capacity();
+  }
+  auto capacity() const -> size_type { return v_.capacity(); }
+
+  auto auto_shrink() -> bool {
+    std::shared_lock<std::shared_mutex> lock(m_);
+    return v_.auto_shrink();
+  }
+  auto auto_shrink() const -> bool { return v_.auto_shrink(); }
+  void set_auto_shrink(bool auto_shrink) {
+    std::unique_lock<std::shared_mutex> lock(m_);
+    v_.set_auto_shrink(auto_shrink);
+  }
+
+  auto expand_factor() -> double {
+    std::shared_lock<std::shared_mutex> lock(m_);
+    return v_.expand_factor();
+  }
+  auto expand_factor() const -> double { return v_.expand_factor(); }
+  void set_expand_factor(double expand_factor) {
+    std::unique_lock<std::shared_mutex> lock(m_);
+    v_.set_expand_factor(expand_factor);
+  }
+
+  auto Empty() -> bool {
+    std::shared_lock<std::shared_mutex> lock(m_);
+    return v_.empty();
+  }
+  auto Empty() const -> bool { return v_.empty(); }
+
+  void ShrinkToFit() {
+    std::unique_lock<std::shared_mutex> lock(m_);
+    v_.ShrinkToFit();
+  }
+
+  void Clear() {
+    std::unique_lock<std::shared_mutex> lock(m_);
+    v_.Clear();
+  }
+
+  auto RawVector() -> Vector<T> {
+    std::shared_lock<std::shared_mutex> lock(m_);
+    return v_;
+  }
+  auto RawVector() const -> Vector<T> { return v_; }
 };
 } // namespace ts_stl
 

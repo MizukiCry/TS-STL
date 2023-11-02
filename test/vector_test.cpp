@@ -72,27 +72,32 @@ TEST(VectorTest, InsertTest) {
 }
 
 TEST(VectorTest, SyncTest) {
-  ts_stl::SyncVector<int> v;
+  for (int t = 0; t < 20; ++t) {
+    ts_stl::SyncVector<int> v;
 
-  for (int i = 0; i < 100; ++i) {
-    auto f = std::async([&]() {
-      for (int j = 0; j < 100; ++j) {
-        auto g = v.WriteLockGuard();
-        v.PushBack(j * 100 + i);
-      }
-    });
+    for (int i = 0; i < 100; ++i) {
+      auto f = std::async([&]() {
+        for (int j = 0; j < 100; ++j) {
+          v.PushBack(j * 100 + i);
+        }
+      });
+    }
+
+    std::vector<std::future<int>> fs;
+    for (int i = 0; i < 100; ++i) {
+      fs.emplace_back(std::async([&]() -> int {
+        int sum = 0;
+        for (int j = 0; j < 100; ++j) {
+          sum += v.PopBack();
+        }
+        return sum;
+      }));
+    }
+    int sum = 0;
+    for (auto &f : fs) {
+      sum += f.get();
+    }
+
+    ASSERT_EQ(sum, 49995000);
   }
-
-  std::atomic_int sum = 0;
-
-  for (int i = 0; i < 100; ++i) {
-    auto f = std::async([&]() {
-      for (int j = 0; j < 100; ++j) {
-        auto g = v.WriteLockGuard();
-        sum += v.PopBack();
-      }
-    });
-  }
-
-  ASSERT_EQ(sum, 49995000);
 }
