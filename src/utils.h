@@ -4,6 +4,7 @@
 #include <cassert>
 #include <chrono>
 #include <iostream>
+#include <utility>
 
 namespace {}
 
@@ -42,14 +43,14 @@ void Fill(Iter begin, Iter end, const T &value) {
 template <typename Iter1, typename Iter2>
 auto Copy(Iter1 dest_begin, Iter2 begin, Iter2 end) -> Iter1 {
   while (begin != end)
-    *dest_begin++ = *begin++;
+    *dest_begin++ = std::move(*begin++);
   return dest_begin;
 }
 
 template <typename Iter1, typename Iter2>
 auto CopyBackward(Iter1 dest_end, Iter2 begin, Iter2 end) -> Iter1 {
   while (begin != end)
-    *--dest_end = *--end;
+    *--dest_end = std::move(*--end);
   return dest_end;
 }
 
