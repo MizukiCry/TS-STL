@@ -65,6 +65,8 @@ public:
   auto end() -> iterator { return data_ + size_; }
   auto begin() const -> const_iterator { return data_; }
   auto end() const -> const_iterator { return data_ + size_; }
+  auto cbegin() const -> const_iterator { return data_; }
+  auto cend() const -> const_iterator { return data_ + size_; }
 
   Vector() {}
 
@@ -205,6 +207,9 @@ public:
     expand_factor_ = expand_factor;
   }
 
+  auto RawData() -> T * { return data_; }
+  auto RawData() const -> const T * { return data_; }
+
   auto Empty() const -> bool { return size_ == 0; }
 
   void ShrinkToFit() { ChangeCapacity(size_); }
@@ -237,6 +242,8 @@ public:
   auto end() -> iterator { return v_.end(); }
   auto begin() const -> const_iterator { return v_.begin(); }
   auto end() const -> const_iterator { return v_.end(); }
+  auto cbegin() const -> const_iterator { return v_.cbegin(); }
+  auto cend() const -> const_iterator { return v_.cend(); }
 
   SyncVector() {}
 

@@ -9,6 +9,15 @@
 namespace {}
 
 namespace ts_stl {
+inline void Assert(bool condition, const char *message) {
+  if (!condition) {
+    std::cerr << message << std::endl;
+    assert(false);
+  }
+}
+
+inline void Todo() { Assert(false, "To be implemented."); }
+
 template <typename T> auto Max(const T &a, const T &b) -> T {
   return a > b ? a : b;
 }
@@ -42,6 +51,8 @@ void Fill(Iter begin, Iter end, const T &value) {
 
 template <typename Iter1, typename Iter2>
 auto Copy(Iter1 dest_begin, Iter2 begin, Iter2 end) -> Iter1 {
+  return std::copy(begin, end, dest_begin);
+  Todo();
   while (begin != end)
     *dest_begin++ = std::move(*begin++);
   return dest_begin;
@@ -49,6 +60,8 @@ auto Copy(Iter1 dest_begin, Iter2 begin, Iter2 end) -> Iter1 {
 
 template <typename Iter1, typename Iter2>
 auto CopyBackward(Iter1 dest_end, Iter2 begin, Iter2 end) -> Iter1 {
+  return std::copy_backward(begin, end, dest_end);
+  Todo();
   while (begin != end)
     *--dest_end = std::move(*--end);
   return dest_end;
@@ -59,15 +72,6 @@ template <typename T> void Swap(T &a, T &b) {
   a = b;
   b = c;
 }
-
-inline void Assert(bool condition, const char *message) {
-  if (!condition) {
-    std::cerr << message << std::endl;
-    assert(false);
-  }
-}
-
-inline void Todo() { Assert(false, "To be implemented."); }
 
 inline auto time_ms() {
   return std::chrono::duration_cast<std::chrono::milliseconds>(

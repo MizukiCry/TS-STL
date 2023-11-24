@@ -41,6 +41,16 @@ public:
     return v_.PopBack();
   }
 
+  auto operator[](size_t index) -> T & {
+    Assert(index < v_.size(), "Stack::operator[]: index out of range.");
+    return v_[index];
+  }
+
+  auto operator[](size_t index) const -> const T & {
+    Assert(index < v_.size(), "Stack::operator[]: index out of range.");
+    return v_[index];
+  }
+
   void Clear() { v_.Clear(); }
 
   auto Empty() const -> bool { return v_.Empty(); }
@@ -56,7 +66,7 @@ public:
   using size_type = typename ts_stl::Stack<T>::size_type;
 
 private:
-  ts_stl::Stack<T> v_;
+  ts_stl::Stack<T> s_;
   std::mutex m_;
 
 public:
@@ -74,51 +84,58 @@ public:
 
   void Push(const T &value) {
     std::lock_guard<std::mutex> lock(m_);
-    v_.PushBack(value);
+    s_.PushBack(value);
   }
 
   void Emplace(T &&value) {
     std::lock_guard<std::mutex> lock(m_);
-    v_.EmplaceBack(std::move(value));
+    s_.EmplaceBack(std::move(value));
   }
 
   auto Top() -> T {
     std::lock_guard<std::mutex> lock(m_);
-    return v_.Back();
+    return s_.Back();
   }
 
-  auto Top() const -> T { return v_.Back(); }
+  auto Top() const -> T { return s_.Back(); }
 
   auto Pop() -> T {
     std::lock_guard<std::mutex> lock(m_);
-    return v_.PopBack();
+    return s_.PopBack();
   }
+
+  auto operator[](size_t index) -> T {
+    std::lock_guard<std::mutex> lock(m_);
+    return s_[index];
+  }
+
+  auto operator[](size_t index) const -> T { return s_[index]; }
 
   void Clear() {
     std::lock_guard<std::mutex> lock(m_);
-    v_.Clear();
+    s_.Clear();
   }
 
   auto Empty() -> bool {
     std::lock_guard<std::mutex> lock(m_);
-    return v_.Empty();
+    return s_.Empty();
   }
 
-  auto Empty() const -> bool { return v_.Empty(); }
+  auto Empty() const -> bool { return s_.Empty(); }
 
   auto Size() -> size_t {
     std::lock_guard<std::mutex> lock(m_);
-    return v_.Size();
+    return s_.Size();
   }
 
-  auto Size() const -> size_t { return v_.Size(); }
+  auto Size() const -> size_t { return s_.Size(); }
 
   auto RawStack() -> Stack<T> {
     std::lock_guard<std::mutex> lock(m_);
-    return v_;
+    return s_;
   }
 
-  auto RawStack() const -> Stack<T> { return v_; }
+  auto RawStack() const -> Stack<T> { return s_; }
 };
 } // namespace ts_stl
 
