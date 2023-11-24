@@ -455,6 +455,23 @@ public:
     q_.EmplaceBack(std::forward<Args>(args)...);
   }
 
+  void Set(size_type index, const T &value) {
+    std::unique_lock<std::shared_mutex> lock(m_);
+    q_[index] = value;
+  }
+
+  void Set(size_type index, const T &&value) {
+    std::unique_lock<std::shared_mutex> lock(m_);
+    q_[index] = std::move(value);
+  }
+
+  auto operator[](const size_type index) -> T {
+    std::unique_lock<std::shared_mutex> lock(m_);
+    return q_[index];
+  }
+
+  auto operator[](const size_type index) const -> const T { return q_[index]; }
+
   auto size() -> size_type {
     std::shared_lock<std::shared_mutex> lock(m_);
     return q_.size();
