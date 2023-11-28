@@ -1,10 +1,13 @@
+#include "src/deque.h"
 #include "src/stack.h"
 #include "src/vector.h"
 #include "test_utils.h"
 #include <algorithm>
+#include <deque>
 #include <iostream>
 #include <queue>
 #include <stack>
+#include <string>
 #include <vector>
 
 template <typename Fn1, typename Fn2>
@@ -22,6 +25,17 @@ void Benchmark(Fn1 fn1, Fn2 fn2, const char *name, size_t time_ms = 3000) {
 
 int main() {
   const int T1 = 1e6, T2 = 1e3;
+
+  (void)[] {
+    // Warm Up
+    std::string s;
+    for (int i = 0; i < T1; ++i) {
+      s.push_back(static_cast<char>(
+          FastRandom(static_cast<size_t>('a'), static_cast<size_t>('z'))));
+    }
+    s.clear();
+  }();
+
   Benchmark(
       [] {
         ts_stl::Vector<int> v;
@@ -67,5 +81,28 @@ int main() {
         std::stack<int>().swap(s);
       },
       "Stack");
+
+  Benchmark(
+      [] {
+        ts_stl::Deque<int> v;
+        for (int i = 0; i < T1; ++i)
+          v.PushBack(i);
+        for (int i = 0; i < T2; ++i)
+          v.Insert(FastRandom(0, v.size()), i);
+        for (int i = 0; i < T1; ++i)
+          v.PopBack();
+        v.Clear();
+      },
+      [] {
+        std::deque<int> v;
+        for (int i = 0; i < T1; ++i)
+          v.push_back(i);
+        for (int i = 0; i < T2; ++i)
+          v.insert(v.begin() + FastRandom(0, v.size()), i);
+        for (int i = 0; i < T1; ++i)
+          v.pop_back();
+        v.clear();
+      },
+      "Deque");
   return 0;
 }

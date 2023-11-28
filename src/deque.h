@@ -15,6 +15,8 @@ public:
   using size_type = std::size_t;
   using different_type = std::ptrdiff_t;
   using const_iterator = const iterator;
+  using reference = T &;
+  using const_reference = const T &;
 
 private:
   T *data_ = nullptr;
@@ -276,27 +278,27 @@ public:
 
   auto Empty() const -> bool { return size_ == 0; }
 
-  auto Front() -> T & {
+  auto Front() -> reference {
     Assert(!Empty(), "Deque::Front(): deque is empty.");
     return data_[front_];
   }
 
-  auto Front() const -> const T & {
+  auto Front() const -> const_reference {
     Assert(!Empty(), "Deque::Front(): deque is empty.");
     return data_[front_];
   }
 
-  auto Back() -> T & {
+  auto Back() -> reference {
     Assert(!Empty(), "Deque::Back(): deque is empty.");
     return data_[Index(back_ - 1)];
   }
 
-  auto Back() const -> const T & {
+  auto Back() const -> const_reference {
     Assert(!Empty(), "Deque::Back(): deque is empty.");
     return data_[Index(back_ - 1)];
   }
 
-  auto PopFront() -> T {
+  auto PopFront() -> value_type {
     Assert(!Empty(), "Deque::PopFront(): deque is empty.");
     front_ = Index(front_ + 1);
     size_--;
@@ -305,7 +307,7 @@ public:
     return value;
   }
 
-  auto PopBack() -> T {
+  auto PopBack() -> value_type {
     Assert(!Empty(), "Deque::PopBack(): deque is empty.");
     back_ = Index(back_ - 1);
     size_--;
@@ -360,22 +362,22 @@ public:
     CheckShrink();
   }
 
-  auto operator[](const size_type index) -> T & {
+  auto operator[](const size_type index) -> reference {
     Assert(index < size_, "Deque::operator[]: index out of range.");
     return data_[Index(front_ + index)];
   }
 
-  auto operator[](const size_type index) const -> const T & {
+  auto operator[](const size_type index) const -> const_reference {
     Assert(index < size_, "Deque::operator[]: index out of range.");
     return data_[Index(front_ + index)];
   }
 
-  auto At(const size_type index) -> T & {
+  auto At(const size_type index) -> reference {
     Assert(index < size_, "Deque::At(): index out of range.");
     return data_[Index(front_ + index)];
   }
 
-  auto At(const size_type index) const -> const T & {
+  auto At(const size_type index) const -> const_reference {
     Assert(index < size_, "Deque::At(): index out of range.");
     return data_[Index(front_ + index)];
   }
@@ -465,12 +467,12 @@ public:
     q_[index] = std::move(value);
   }
 
-  auto operator[](const size_type index) -> T {
+  auto operator[](const size_type index) -> value_type {
     std::unique_lock<std::shared_mutex> lock(m_);
     return q_[index];
   }
 
-  auto operator[](const size_type index) const -> const T { return q_[index]; }
+  auto operator[](const size_type index) const -> value_type { return q_[index]; }
 
   auto size() -> size_type {
     std::shared_lock<std::shared_mutex> lock(m_);
