@@ -1,4 +1,5 @@
 #include "src/deque.h"
+#include "src/queue.h"
 #include "src/stack.h"
 #include "src/vector.h"
 #include "test_utils.h"
@@ -34,7 +35,8 @@ int main() {
           FastRandom(static_cast<size_t>('a'), static_cast<size_t>('z'))));
     }
     s.clear();
-  }();
+  }
+  ();
 
   Benchmark(
       [] {
@@ -84,25 +86,42 @@ int main() {
 
   Benchmark(
       [] {
-        ts_stl::Deque<int> v;
+        ts_stl::Deque<int> q;
         for (int i = 0; i < T1; ++i)
-          v.PushBack(i);
+          q.PushBack(i);
         for (int i = 0; i < T2; ++i)
-          v.Insert(FastRandom(0, v.size()), i);
+          q.Insert(FastRandom(0, q.size()), i);
         for (int i = 0; i < T1; ++i)
-          v.PopBack();
-        v.Clear();
+          q.PopBack();
+        q.Clear();
       },
       [] {
-        std::deque<int> v;
+        std::deque<int> q;
         for (int i = 0; i < T1; ++i)
-          v.push_back(i);
+          q.push_back(i);
         for (int i = 0; i < T2; ++i)
-          v.insert(v.begin() + FastRandom(0, v.size()), i);
+          q.insert(q.begin() + FastRandom(0, q.size()), i);
         for (int i = 0; i < T1; ++i)
-          v.pop_back();
-        v.clear();
+          q.pop_back();
+        q.clear();
       },
       "Deque");
+
+  Benchmark(
+      [] {
+        ts_stl::Queue<int> q;
+        for (int i = 0; i < T1; ++i)
+          q.Push(i);
+        for (int i = 0; i < T1; ++i)
+          q.Pop();
+      },
+      [] {
+        std::queue<int> q;
+        for (int i = 0; i < T1; ++i)
+          q.push(i);
+        for (int i = 0; i < T1; ++i)
+          q.pop();
+      },
+      "Queue");
   return 0;
 }
