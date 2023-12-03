@@ -32,6 +32,7 @@ TEST(BitsetTest, RandomTest) {
   for (int i = 0; i < T; ++i) {
     Shuffle();
     ASSERT_EQ(b1.to_string(), b2.ToString());
+    ASSERT_EQ(b1.count(), b2.Count());
   }
 
   for (int i = 0; i < T; ++i) {

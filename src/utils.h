@@ -1,10 +1,11 @@
 #ifndef TS_STL_UTILS_H_
 #define TS_STL_UTILS_H_
 
+#include <algorithm>
 #include <cassert>
 #include <chrono>
-#include <iostream>
 #include <cstring>
+#include <iostream>
 #include <utility>
 
 namespace {}
@@ -90,6 +91,24 @@ inline auto time_ns() {
   return std::chrono::duration_cast<std::chrono::nanoseconds>(
              std::chrono::system_clock::now().time_since_epoch())
       .count();
+}
+
+template <typename Iter, typename Pred>
+auto AllOf(Iter first, Iter last, Pred pred) -> bool {
+  // Todo
+  return std::all_of(first, last, pred);
+}
+
+template <typename Iter, typename Pred>
+auto AnyOf(Iter first, Iter last, Pred pred) -> bool {
+  // Todo
+  return std::any_of(first, last, pred);
+}
+
+template <typename Iter, typename Pred>
+auto NoneOf(Iter first, Iter last, Pred pred) -> bool {
+  // Todo
+  return std::none_of(first, last, pred);
 }
 
 } // namespace ts_stl

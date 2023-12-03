@@ -2,6 +2,7 @@
 #define TS_STL_BITSET_H_
 
 #include "utils.h"
+#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <mutex>
@@ -167,7 +168,9 @@ public:
         break;
       }
     }
-    result._bits[Num - 1] &= (static_cast<uint64_t>(1) << (S & 63)) - 1;
+    if (S & 63) {
+      result._bits[Num - 1] &= (static_cast<uint64_t>(1) << (S & 63)) - 1;
+    }
     return result;
   }
 
@@ -201,7 +204,9 @@ public:
         break;
       }
     }
-    _bits[Num - 1] &= (static_cast<uint64_t>(1) << (S & 63)) - 1;
+    if (S & 63) {
+      _bits[Num - 1] &= (static_cast<uint64_t>(1) << (S & 63)) - 1;
+    }
     return *this;
   }
 
@@ -219,7 +224,7 @@ public:
     return *this;
   }
 
-  auto ToString() -> std::string {
+  auto ToString() const -> std::string {
     std::string result(S, '0');
     for (size_t i = 0; i < S; ++i) {
       if (Test(i)) {
@@ -227,6 +232,33 @@ public:
       }
     }
     return result;
+  }
+
+  auto Count() const -> size_t {
+    size_t result = 0;
+    for (size_t i = 0; i < Num; ++i) {
+      // result += __builtin_popcountll(_bits[i]);
+      result += std::__popcount(_bits[i]);
+    }
+    return result;
+  }
+
+  auto All() const -> bool {
+    if (uint64_t x =
+            (S & 63) ? (static_cast<uint64_t>(1) << (S & 63)) - 1 : UINT64_MAX;
+        _bits[0] != x) {
+      return false;
+    }
+    return AllOf(_bits + 1, _bits + Num,
+                 [](uint64_t x) { return x == UINT64_MAX; });
+  }
+
+  auto Any() const -> bool {
+    return AnyOf(_bits, _bits + Num, [](uint64_t x) { return x != 0; });
+  }
+
+  auto None() const -> bool {
+    return NoneOf(_bits, _bits + Num, [](uint64_t x) { return x != 0; });
   }
 };
 } // namespace ts_stl
