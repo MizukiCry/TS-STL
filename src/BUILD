@@ -3,6 +3,7 @@ cc_library(
     hdrs = glob(["*.h"]),
     visibility = [
         "//test:__pkg__",
+        "//test/benchmark:__pkg__",
         "//example:__pkg__"
     ],
 )

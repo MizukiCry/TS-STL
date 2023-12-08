@@ -4,13 +4,29 @@
 #include <algorithm>
 #include <cassert>
 #include <chrono>
-#include <cstring>
 #include <iostream>
+#include <iterator>
+#include <memory>
+#include <type_traits>
 #include <utility>
 
 namespace {}
 
 namespace ts_stl {
+
+// SFINAE
+template <typename T> class has_assignment_operator {
+private:
+  template <typename U>
+  static auto test(U &&u)
+      -> decltype(std::declval<U &>() = std::declval<U>(), std::true_type{});
+
+  template <typename> static auto test(...) -> std::false_type;
+
+public:
+  static constexpr bool value = decltype(test<T>(std::declval<T>()))::value;
+};
+
 inline void Assert(bool condition, const char *message) {
   if (!condition) {
     std::cerr << message << std::endl;
@@ -54,19 +70,48 @@ void Fill(Iter begin, Iter end, const T &value) {
 template <typename Iter1, typename Iter2>
 auto Copy(Iter1 dest_begin, Iter2 begin, Iter2 end) -> Iter1 {
   return std::copy(begin, end, dest_begin);
-  // Todo
-  // while (begin != end)
-  //   *dest_begin++ = std::move(*begin++);
-  // return dest_begin;
 }
 
 template <typename Iter1, typename Iter2>
 auto CopyBackward(Iter1 dest_end, Iter2 begin, Iter2 end) -> Iter1 {
   return std::copy_backward(begin, end, dest_end);
-  // Todo
-  // while (begin != end)
-  //   *--dest_end = std::move(*--end);
-  // return dest_end;
+}
+
+template <typename Iter1, typename Iter2>
+auto ConstructorCopy(Iter1 dest_begin, Iter2 begin, Iter2 end) -> Iter1 {
+  while (begin != end) {
+    new (std::addressof(*dest_begin++))
+        typename std::iterator_traits<Iter1>::value_type(std::move(*begin++));
+  }
+  return dest_begin;
+}
+
+template <typename Iter1, typename Iter2>
+auto ConstructorCopyBackward(Iter1 dest_end, Iter2 begin, Iter2 end) -> Iter1 {
+  while (begin != end) {
+    new (std::addressof(*--dest_end))
+        typename std::iterator_traits<Iter1>::value_type(std::move(*--end));
+  }
+  return dest_end;
+}
+
+template <typename Iter>
+auto AutoCopy(Iter dest_begin, Iter begin, Iter end) -> Iter {
+  if constexpr (has_assignment_operator<decltype(*Iter{})>::value) {
+    return Copy(dest_begin, begin, end);
+  } else {
+    // static_assert(has_assignment_operator<decltype(*Iter{})>::value, "!");
+    return ConstructorCopy(dest_begin, begin, end);
+  }
+}
+
+template <typename Iter>
+auto AutoCopyBackward(Iter dest_end, Iter begin, Iter end) -> Iter {
+  if constexpr (has_assignment_operator<decltype(*Iter{})>::value) {
+    return CopyBackward(dest_end, begin, end);
+  } else {
+    return ConstructorCopyBackward(dest_end, begin, end);
+  }
 }
 
 template <typename T> void Swap(T &a, T &b) {

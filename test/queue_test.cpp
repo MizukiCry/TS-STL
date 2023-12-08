@@ -1,6 +1,5 @@
 #include "src/queue.h"
 #include "test_utils.h"
-#include <cstddef>
 #include <future>
 #include <gtest/gtest.h>
 

@@ -1,7 +1,7 @@
 #ifndef TS_STL_VECTOR_H_
 #define TS_STL_VECTOR_H_
 
-#include "utils.h"
+#include "src/utils.h"
 #include <cstddef>
 #include <mutex>
 #include <shared_mutex>
@@ -40,8 +40,7 @@ private:
     if (size_ > capacity) {
       size_ = capacity;
     }
-    Copy(new_data, data_, data_ + size_);
-    // std::copy(data_, data_ + size_, new_data);
+    AutoCopy(new_data, data_, data_ + size_);
     Swap(new_data, data_);
     delete[] new_data;
     capacity_ = capacity;
@@ -81,7 +80,7 @@ public:
       : size_(other.size_), capacity_(other.capacity_),
         expand_factor_(other.expand_factor_), auto_shrink_(other.auto_shrink_) {
     data_ = new value_type[capacity_];
-    Copy(data_, other.data_, other.data_ + size_);
+    AutoCopy(data_, other.data_, other.data_ + size_);
   }
 
   Vector(Vector &&other) {
@@ -101,7 +100,7 @@ public:
       auto_shrink_ = other.auto_shrink_;
       delete[] data_;
       data_ = new value_type[capacity_];
-      Copy(data_, other.data_, other.data_ + size_);
+      AutoCopy(data_, other.data_, other.data_ + size_);
     }
     return *this;
   }
@@ -150,7 +149,7 @@ public:
   void Insert(size_type index, const T &value) {
     Assert(index <= size_, "Vector::Insert(): index out of range.");
     CheckExpand();
-    CopyBackward(data_ + size_ + 1, data_ + index, data_ + size_);
+    AutoCopyBackward(data_ + size_ + 1, data_ + index, data_ + size_);
     *(data_ + index) = value;
     size_++;
   }
@@ -158,7 +157,7 @@ public:
   template <typename... Args> void Emplace(size_type index, Args &&...args) {
     Assert(index <= size_, "Vector::Emplace(): index out of range.");
     CheckExpand();
-    CopyBackward(data_ + size_ + 1, data_ + index, data_ + size_);
+    AutoCopyBackward(data_ + size_ + 1, data_ + index, data_ + size_);
     new (data_ + index) T(std::forward<Args>(args)...);
     size_++;
   }
@@ -166,7 +165,7 @@ public:
   auto Delete(size_type index) -> T {
     Assert(index < size_, "Vector::Delete(): index out of range.");
     T t = *(data_ + index);
-    Copy(data_ + index, data_ + index + 1, data_ + size_);
+    AutoCopy(data_ + index, data_ + index + 1, data_ + size_);
     size_--;
     CheckShrink();
     return t;

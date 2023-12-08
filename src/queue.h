@@ -1,7 +1,7 @@
 #ifndef TS_STL_QUEUE_H_
 #define TS_STL_QUEUE_H_
 
-#include "deque.h"
+#include "src/deque.h"
 #include <mutex>
 #include <shared_mutex>
 

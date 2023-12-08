@@ -1,6 +1,5 @@
 #include "src/vector.h"
 #include "test_utils.h"
-#include <atomic>
 #include <future>
 #include <gtest/gtest.h>
 

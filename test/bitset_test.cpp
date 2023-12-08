@@ -1,7 +1,6 @@
 #include "src/bitset.h"
 #include "test_utils.h"
 #include <bitset>
-#include <future>
 #include <gtest/gtest.h>
 
 TEST(BitsetTest, RandomTest) {

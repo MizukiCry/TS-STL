@@ -1,6 +1,9 @@
 cc_library(
     name = "test_utils",
     hdrs = ["test_utils.h"],
+    visibility = [
+        "//test/benchmark:__pkg__",
+    ],
 )
 
 cc_binary(
@@ -13,15 +16,15 @@ cc_binary(
     ]
 )
 
-cc_binary(
-    name = "benchmark",
-    srcs = ["benchmark.cpp"],
-    copts = ["-std=c++17", "-O2"],
-    deps = [
-        "//src:ts-stl",
-        "test_utils"
-    ],
-)
+# cc_binary(
+#     name = "benchmark",
+#     srcs = ["benchmark.cpp"],
+#     copts = ["-std=c++17", "-O2"],
+#     deps = [
+#         "//src:ts-stl",
+#         "test_utils"
+#     ],
+# )
 
 cc_test(
     name = "vector_test",
@@ -75,6 +78,30 @@ cc_test(
     name = "bitset_test",
     size = "small",
     srcs = ["bitset_test.cpp"],
+    copts = ["-std=c++17"],
+    deps = [
+        "@com_google_googletest//:gtest_main",
+        "//src:ts-stl",
+        "test_utils",
+    ]
+)
+
+cc_test(
+    name = "hashmap_test",
+    size = "small",
+    srcs = ["hashmap_test.cpp"],
+    copts = ["-std=c++17"],
+    deps = [
+        "@com_google_googletest//:gtest_main",
+        "//src:ts-stl",
+        "test_utils",
+    ]
+)
+
+cc_test(
+    name = "array_test",
+    size = "small",
+    srcs = ["array_test.cpp"],
     copts = ["-std=c++17"],
     deps = [
         "@com_google_googletest//:gtest_main",
