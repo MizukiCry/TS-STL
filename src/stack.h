@@ -3,7 +3,6 @@
 
 #include "src/vector.h"
 #include <mutex>
-#include <shared_mutex>
 
 namespace ts_stl {
 template <typename T> class Stack {

@@ -6,5 +6,7 @@ int main() {
 
   std::string a[3];
 
+  std::swap(s, a);
+
   return 0;
 }

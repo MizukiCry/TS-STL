@@ -16,16 +16,6 @@ cc_binary(
     ]
 )
 
-# cc_binary(
-#     name = "benchmark",
-#     srcs = ["benchmark.cpp"],
-#     copts = ["-std=c++17", "-O2"],
-#     deps = [
-#         "//src:ts-stl",
-#         "test_utils"
-#     ],
-# )
-
 cc_test(
     name = "vector_test",
     size = "small",
