@@ -168,6 +168,7 @@ public:
     delete[] _array;
     _array = new value_type[_size];
     Copy(_array, other._array, other._array + _size);
+    return *this;
   }
 
   auto operator=(Array &&other) -> Array & {
@@ -175,6 +176,7 @@ public:
     delete[] _array;
     _array = other._array;
     other._array = nullptr;
+    return *this;
   }
 
   auto begin() -> iterator { return _array; }
@@ -194,6 +196,12 @@ public:
 
   auto operator[](size_type index) const -> const_reference {
     return _array[index];
+  }
+
+  void Resize(size_type size) {
+    Array<T> new_array(size);
+    Copy(new_array._array, _array, _array + Min(size, _size));
+    *this = new_array;
   }
 };
 

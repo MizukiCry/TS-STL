@@ -5,6 +5,7 @@
 
 TEST(VectorTest, BasicTest) {
   ts_stl::Vector<int> v;
+  v = ts_stl::Vector<int>();
   ASSERT_EQ(v.size(), 0);
   ASSERT_EQ(v.begin(), v.end());
   ASSERT_TRUE(v.Empty());

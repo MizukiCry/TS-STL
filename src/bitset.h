@@ -16,86 +16,86 @@ template <size_t S> class Bitset {
 
 private:
   static constexpr const size_t Num = (S + 63) >> 6;
-  uint64_t _bits[Num];
+  uint64_t bits_[Num];
 
 public:
-  Bitset() { Fill(_bits + 0, _bits + Num, 0); }
+  Bitset() { Fill(bits_ + 0, bits_ + Num, 0); }
 
   Bitset(uint64_t value) {
-    _bits[0] = value;
-    Fill(_bits + 1, _bits + Num, 0);
+    bits_[0] = value;
+    Fill(bits_ + 1, bits_ + Num, 0);
   }
 
   Bitset(const Bitset<S> &other) {
-    Copy(_bits, other._bits, other._bits + Num);
+    Copy(bits_, other.bits_, other.bits_ + Num);
   }
 
   auto operator=(const Bitset<S> &other) {
-    Copy(_bits, other._bits, other._bits + Num);
+    Copy(bits_, other.bits_, other.bits_ + Num);
     return *this;
   }
 
-  void Set() { Fill(_bits, _bits + Num, UINT64_MAX); }
+  void Set() { Fill(bits_, bits_ + Num, UINT64_MAX); }
 
   void Set(size_t index) {
     Assert(index < S, "Bitset::Set(): index out of range.");
-    _bits[index >> 6] |= static_cast<uint64_t>(1) << (index & 63);
+    bits_[index >> 6] |= static_cast<uint64_t>(1) << (index & 63);
   }
 
-  void Reset() { Fill(_bits, _bits + Num, 0); }
+  void Reset() { Fill(bits_, bits_ + Num, 0); }
 
   void Reset(size_t index) {
     Assert(index < S, "Bitset::Reset(): index out of range.");
-    _bits[index >> 6] &= ~(static_cast<uint64_t>(1) << (index & 63));
+    bits_[index >> 6] &= ~(static_cast<uint64_t>(1) << (index & 63));
   }
 
   void Flip() {
     for (size_t i = 0; i < Num; ++i) {
-      _bits[i] = ~_bits[i];
+      bits_[i] = ~bits_[i];
     }
   }
 
   void Flip(size_t index) {
     Assert(index < S, "Bitset::Flip(): index out of range.");
-    _bits[index >> 6] ^= static_cast<uint64_t>(1) << (index & 63);
+    bits_[index >> 6] ^= static_cast<uint64_t>(1) << (index & 63);
   }
 
   static constexpr size_t Size() { return S; }
 
   auto Test(size_t index) const -> bool {
     Assert(index < S, "Bitset::Test(): index out of range.");
-    return (_bits[index >> 6] & (static_cast<uint64_t>(1) << (index & 63))) !=
+    return (bits_[index >> 6] & (static_cast<uint64_t>(1) << (index & 63))) !=
            0;
   }
 
   class Reference {
   private:
-    Bitset *_bitset;
-    size_t _index;
+    Bitset *bitset_;
+    size_t index_;
 
   public:
-    Reference(Bitset *bitset, size_t index) : _bitset(bitset), _index(index) {}
+    Reference(Bitset *bitset, size_t index) : bitset_(bitset), index_(index) {}
     Reference(const Reference &) = delete;
 
     auto operator=(bool b) -> Reference & {
       if (b) {
-        _bitset->Set(_index);
+        bitset_->Set(index_);
       } else {
-        _bitset->Reset(_index);
+        bitset_->Reset(index_);
       }
       return *this;
     }
 
     auto operator=(const Reference &other) -> Reference & {
       if (other) {
-        _bitset->Set(_index);
+        bitset_->Set(index_);
       } else {
-        _bitset->Reset(_index);
+        bitset_->Reset(index_);
       }
       return *this;
     }
 
-    operator bool() const { return _bitset->Test(_index); }
+    operator bool() const { return bitset_->Test(index_); }
   };
 
   auto operator[](size_t index) const -> bool { return Test(index); }
@@ -105,7 +105,7 @@ public:
   auto operator&(const Bitset<S> &other) const -> Bitset<S> {
     Bitset<S> result;
     for (size_t i = 0; i < Num; ++i) {
-      result._bits[i] = _bits[i] & other._bits[i];
+      result.bits_[i] = bits_[i] & other.bits_[i];
     }
     return result;
   }
@@ -113,7 +113,7 @@ public:
   auto operator|(const Bitset<S> &other) const -> Bitset<S> {
     Bitset<S> result;
     for (size_t i = 0; i < Num; ++i) {
-      result._bits[i] = _bits[i] | other._bits[i];
+      result.bits_[i] = bits_[i] | other.bits_[i];
     }
     return result;
   }
@@ -121,28 +121,28 @@ public:
   auto operator^(const Bitset<S> &other) const -> Bitset<S> {
     Bitset<S> result;
     for (size_t i = 0; i < Num; ++i) {
-      result._bits[i] = _bits[i] ^ other._bits[i];
+      result.bits_[i] = bits_[i] ^ other.bits_[i];
     }
     return result;
   }
 
   auto operator&=(const Bitset<S> &other) -> Bitset<S> & {
     for (size_t i = 0; i < Num; ++i) {
-      _bits[i] &= other._bits[i];
+      bits_[i] &= other.bits_[i];
     }
     return *this;
   }
 
   auto operator|=(const Bitset<S> &other) -> Bitset<S> & {
     for (size_t i = 0; i < Num; ++i) {
-      _bits[i] |= other._bits[i];
+      bits_[i] |= other.bits_[i];
     }
     return *this;
   }
 
   auto operator^=(const Bitset<S> &other) -> Bitset<S> & {
     for (size_t i = 0; i < Num; ++i) {
-      _bits[i] ^= other._bits[i];
+      bits_[i] ^= other.bits_[i];
     }
     return *this;
   }
@@ -150,7 +150,7 @@ public:
   auto operator~() const -> Bitset<S> {
     Bitset<S> result;
     for (size_t i = 0; i < Num; ++i) {
-      result._bits[i] = ~_bits[i];
+      result.bits_[i] = ~bits_[i];
     }
     return result;
   }
@@ -160,16 +160,16 @@ public:
     const size_t b = n >> 6, r = n & 63;
     for (size_t i = Num - 1;; --i) {
       if (i > b && r != 0) {
-        result._bits[i] = (_bits[i - b] << r) | (_bits[i - b - 1] >> (64 - r));
+        result.bits_[i] = (bits_[i - b] << r) | (bits_[i - b - 1] >> (64 - r));
       } else if (i >= b) {
-        result._bits[i] = _bits[i - b] << r;
+        result.bits_[i] = bits_[i - b] << r;
       }
       if (i <= b) {
         break;
       }
     }
     if (S & 63) {
-      result._bits[Num - 1] &= (static_cast<uint64_t>(1) << (S & 63)) - 1;
+      result.bits_[Num - 1] &= (static_cast<uint64_t>(1) << (S & 63)) - 1;
     }
     return result;
   }
@@ -179,9 +179,9 @@ public:
     const size_t b = n >> 6, r = n & 63;
     for (size_t i = 0;; ++i) {
       if (i + b + 1 < Num && r != 0) {
-        result._bits[i] = (_bits[i + b + 1] << (64 - r)) | (_bits[i + b] >> r);
+        result.bits_[i] = (bits_[i + b + 1] << (64 - r)) | (bits_[i + b] >> r);
       } else if (i + b + 1 <= Num) {
-        result._bits[i] = _bits[i + b] >> r;
+        result.bits_[i] = bits_[i + b] >> r;
       }
       if (i + b + 1 >= Num) {
         break;
@@ -194,18 +194,18 @@ public:
     const size_t b = n >> 6, r = n & 63;
     for (size_t i = Num - 1;; --i) {
       if (i > b && r != 0) {
-        _bits[i] = (_bits[i - b] << r) | (_bits[i - b - 1] >> (64 - r));
+        bits_[i] = (bits_[i - b] << r) | (bits_[i - b - 1] >> (64 - r));
       } else if (i >= b) {
-        _bits[i] = _bits[i - b] << r;
+        bits_[i] = bits_[i - b] << r;
       } else {
-        _bits[i] = 0;
+        bits_[i] = 0;
       }
       if (i == 0) {
         break;
       }
     }
     if (S & 63) {
-      _bits[Num - 1] &= (static_cast<uint64_t>(1) << (S & 63)) - 1;
+      bits_[Num - 1] &= (static_cast<uint64_t>(1) << (S & 63)) - 1;
     }
     return *this;
   }
@@ -214,11 +214,11 @@ public:
     const size_t b = n >> 6, r = n & 63;
     for (size_t i = 0; i < Num; ++i) {
       if (i + b + 1 < Num && r != 0) {
-        _bits[i] = (_bits[i + b + 1] << (64 - r)) | (_bits[i + b] >> r);
+        bits_[i] = (bits_[i + b + 1] << (64 - r)) | (bits_[i + b] >> r);
       } else if (i + b + 1 <= Num) {
-        _bits[i] = _bits[i + b] >> r;
+        bits_[i] = bits_[i + b] >> r;
       } else {
-        _bits[i] = 0;
+        bits_[i] = 0;
       }
     }
     return *this;
@@ -237,8 +237,8 @@ public:
   auto Count() const -> size_t {
     size_t result = 0;
     for (size_t i = 0; i < Num; ++i) {
-      // result += __builtin_popcountll(_bits[i]);
-      result += std::__popcount(_bits[i]);
+      // result += __builtin_popcountll(bits_[i]);
+      result += std::__popcount(bits_[i]);
     }
     return result;
   }
@@ -246,19 +246,19 @@ public:
   auto All() const -> bool {
     if (uint64_t x =
             (S & 63) ? (static_cast<uint64_t>(1) << (S & 63)) - 1 : UINT64_MAX;
-        _bits[0] != x) {
+        bits_[0] != x) {
       return false;
     }
-    return AllOf(_bits + 1, _bits + Num,
+    return AllOf(bits_ + 1, bits_ + Num,
                  [](uint64_t x) { return x == UINT64_MAX; });
   }
 
   auto Any() const -> bool {
-    return AnyOf(_bits, _bits + Num, [](uint64_t x) { return x != 0; });
+    return AnyOf(bits_, bits_ + Num, [](uint64_t x) { return x != 0; });
   }
 
   auto None() const -> bool {
-    return NoneOf(_bits, _bits + Num, [](uint64_t x) { return x != 0; });
+    return NoneOf(bits_, bits_ + Num, [](uint64_t x) { return x != 0; });
   }
 };
 } // namespace ts_stl

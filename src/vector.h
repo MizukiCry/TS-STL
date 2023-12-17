@@ -93,7 +93,7 @@ public:
   }
 
   auto operator=(const Vector &other) -> Vector & {
-    if (this != other) {
+    if (this != &other) {
       size_ = other.size_;
       capacity_ = other.capacity_;
       expand_factor_ = other.expand_factor_;
@@ -106,7 +106,7 @@ public:
   }
 
   auto operator=(Vector &&other) -> Vector & {
-    if (this != other) {
+    if (this != &other) {
       size_ = other.size_;
       capacity_ = other.capacity_;
       expand_factor_ = other.expand_factor_;
