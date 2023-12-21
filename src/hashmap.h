@@ -393,6 +393,8 @@ public:
 private:
 public:
   SyncHashMap() { Assert(false, "SyncHashMap: Unimplemented!"); }
+
+  ~SyncHashMap() = default;
 };
 } // namespace ts_stl
 

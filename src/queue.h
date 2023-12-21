@@ -77,14 +77,18 @@ public:
   SyncQueue(SyncQueue &&other) = default;
 
   auto operator=(const SyncQueue &other) -> SyncQueue & {
-    std::unique_lock<std::shared_mutex> lock(m_);
-    q_ = other.q_;
+    if (this != &other) {
+      std::unique_lock<std::shared_mutex> lock(m_);
+      q_ = other.q_;
+    }
     return *this;
   }
 
   auto operator=(SyncQueue &&other) -> SyncQueue & {
-    std::unique_lock<std::shared_mutex> lock(m_);
-    q_ = std::move(other.q_);
+    if (this != &other) {
+      std::unique_lock<std::shared_mutex> lock(m_);
+      q_ = std::move(other.q_);
+    }
     return *this;
   }
 

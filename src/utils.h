@@ -7,6 +7,7 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
+#include <random>
 #include <type_traits>
 #include <utility>
 
@@ -154,6 +155,16 @@ template <typename Iter, typename Pred>
 auto NoneOf(Iter first, Iter last, Pred pred) -> bool {
   // Todo
   return std::none_of(first, last, pred);
+}
+
+inline auto Random() -> size_t {
+  static std::mt19937_64 Rs(
+      std::chrono::system_clock::now().time_since_epoch().count());
+  return Rs();
+}
+
+inline auto Random(size_t min, size_t max) -> size_t {
+  return min + (Random() % (max - min + 1));
 }
 
 } // namespace ts_stl
