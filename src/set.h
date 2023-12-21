@@ -15,7 +15,9 @@ public:
   using const_reference = const value_type &;
 
 private:
+  // Todo: Implement Set<T> = Map<T, void>
 public:
+  Set() { Assert(false, "Set: Unimplemented!"); }
 };
 
 template <typename T> class SyncSet {
